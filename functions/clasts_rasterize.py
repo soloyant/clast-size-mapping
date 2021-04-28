@@ -7,13 +7,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-def clasts_rasterize(ClastImageFilePath, ClastSizeListCSVFilePath, RasterFileWritingPath, field = "Major_axis", parameter="quantile", cellsize=1, percentile=0.5, plot=True, figuresize = (15,20)):
+def clasts_rasterize(ClastImageFilePath, ClastSizeListCSVFilePath, RasterFileWritingPath, field = "Clast_length", parameter="quantile", cellsize=1, percentile=0.5, plot=True, figuresize = (15,20)):
 
     """Converts the clast information from vector type to raster type.
     ClastImageFilePath: Path of the geotiff file used to realize the clast detection and measurement
     ClastSizeListCSVFilePath: Path of the CSV file containing the list of previously detected and measured clasts
     RasterFileWritingPath: Path to be used for writing the raster produced by the present function
-    field: field (i.e. clast dimension) to be considered for computation (default = "Major_axis")
+    field: field (i.e. clast dimension) to be considered for computation (default = "Clast_length")
     parameter: Parameter to be computed for each cell: 
         - "quantile": returns the quantile valued for the threshold specified by the "percentile" keyword 
         - "density": returns the density of objects per cell size unit
