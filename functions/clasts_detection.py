@@ -54,7 +54,7 @@ def clasts_detect(mode, imgpath, resolution=0.001, metric_cropsize=1, plot=True,
     saveplot: (boolean) Save the detection and histogram figures
     saveresults: (boolean) Save the clast sizes into a CSV file
     devicemode: "gpu", "cpu" (default = "gpu") (see tesorflow-gpu documentation)
-	devicenumber: id number of the device to be used (default = 0)
+    devicenumber: id number of the device to be used (default = 0)
     n_zero: Starting row (in case of resuming a previously stopped processing)(default = 0)
     """
     DEVICE = "/"+str.lower(devicemode)+":"+str(devicenumber)  # /cpu:0 or /gpu:0
@@ -146,17 +146,21 @@ def clasts_detect(mode, imgpath, resolution=0.001, metric_cropsize=1, plot=True,
     
                 p1 = Polygon(polygon)
                 p1 = p1.buffer(0)
-    
-                line_ax1 = [(xx_ax1_rot_plus[0], yy_ax1_rot_plus[0]), (xx_ax1_rot_plus[-1], yy_ax1_rot_plus[-1])]
+
+                line_ax1 = [(xx_ax1_rot_ext[0], yy_ax1_rot_ext[0]), (xx_ax1_rot_ext[-1], yy_ax1_rot_ext[-1])]
                 p2_ax1 = LineString(line_ax1)
-                intersection_line_ax1 = p1.intersection(p2_ax1)
-    
-                line_ax2 = [(xx_ax2_rot_plus[0], yy_ax2_rot_plus[0]), (xx_ax2_rot_plus[-1], yy_ax2_rot_plus[-1])]
+                
+                line_ax2 = [(xx_ax2_rot_ext[0], yy_ax2_rot_ext[0]), (xx_ax2_rot_ext[-1], yy_ax2_rot_ext[-1])]
                 p2_ax2 = LineString(line_ax2)
-                intersection_line_ax2 = p1.intersection(p2_ax2)
-    
-                length = intersection_line_ax1.length
-                width = intersection_line_ax2.length
+                
+                if (p1.is_valid & p2_ax1.is_valid & p2_ax2.is_valid):
+                    intersection_line_ax1 = p1.intersection(p2_ax1)
+                    intersection_line_ax2 = p1.intersection(p2_ax2)
+                    length = intersection_line_ax1.length
+                    width = intersection_line_ax2.length
+                else:
+                    length = math.nan
+                    width = math.nan
 
                 #Storing measurements
                 clasts['clast_ID'].iloc[i]=int(i)
@@ -298,20 +302,24 @@ def clasts_detect(mode, imgpath, resolution=0.001, metric_cropsize=1, plot=True,
                 
                                 p1 = Polygon(polygon)
                                 p1 = p1.buffer(0)
-                            
+                                
                                 line_ax1 = [(xx_ax1_rot_ext[0], yy_ax1_rot_ext[0]), (xx_ax1_rot_ext[-1], yy_ax1_rot_ext[-1])]
                                 p2_ax1 = LineString(line_ax1)
-                                intersection_line_ax1 = p1.intersection(p2_ax1)
-                
+                                
                                 line_ax2 = [(xx_ax2_rot_ext[0], yy_ax2_rot_ext[0]), (xx_ax2_rot_ext[-1], yy_ax2_rot_ext[-1])]
                                 p2_ax2 = LineString(line_ax2)
-                                intersection_line_ax2 = p1.intersection(p2_ax2)
-                
-                                length = intersection_line_ax1.length
-                                width = intersection_line_ax2.length
-        
+                                
+                                if (p1.is_valid & p2_ax1.is_valid & p2_ax2.is_valid):
+                                    intersection_line_ax1 = p1.intersection(p2_ax1)
+                                    intersection_line_ax2 = p1.intersection(p2_ax2)
+                                    length = intersection_line_ax1.length
+                                    width = intersection_line_ax2.length
+                                else:
+                                    length = math.nan
+                                    width = math.nan
+                                
                                 #Storing measurements
-                                clasts['clast_ID'].iloc[total_number_of_detected_objects+i]=int(i)
+                                clasts['clast_ID'].iloc[total_number_of_detected_objects+i]=int(total_number_of_detected_objects+i)
                                 clasts['x'].iloc[total_number_of_detected_objects+i]=image_x_corner+(crop_x+abs(center[0]))*resolution
                                 clasts['y'].iloc[total_number_of_detected_objects+i]=image_y_corner+(crop_y-abs(center[1]))*resolution #y coordinates are upside down
                                 clasts['Ellipse_major_axis'].iloc[total_number_of_detected_objects+i]=abs(axes[0]*resolution*2) #(*2 for getting diameter values)

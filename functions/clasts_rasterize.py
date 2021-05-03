@@ -6,6 +6,21 @@ import gdal
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from tqdm import tqdm
+
+def cart2pol(x, y):
+    rho = np.sqrt(x**2 + y**2)
+    phi = np.arctan2(y, x)
+    if phi>=np.pi*2:
+        phi=phi-np.pi*2
+    if phi<0:
+        phi=phi+np.pi*2
+    return(rho, phi)
+
+def pol2cart(rho, phi):
+    x = rho * np.cos(phi)
+    y = rho * np.sin(phi)
+    return(x, y)
 
 def clasts_rasterize(ClastImageFilePath, ClastSizeListCSVFilePath, RasterFileWritingPath, field = "Clast_length", parameter="quantile", cellsize=1, percentile=0.5, plot=True, figuresize = (15,20)):
 
@@ -29,38 +44,68 @@ def clasts_rasterize(ClastImageFilePath, ClastSizeListCSVFilePath, RasterFileWri
     
     clasts = pd.read_csv(ClastSizeListCSVFilePath)
     local_clasts = clasts.copy()
+    if str.lower(field) == "orientation":
+        local_clasts['u'], local_clasts['v'] = pol2cart(np.ones(np.shape(local_clasts)[0]), np.deg2rad(local_clasts['Orientation']))
     local_clasts['y'] = clasts['y']-np.min(clasts['y'])
     local_clasts['x'] = clasts['x']-np.min(clasts['x'])
     n_rows = math.ceil(np.max(local_clasts['y'])/cellsize)
     n_cols = math.ceil(np.max(local_clasts['x'])/cellsize)
     
     p = np.zeros((n_rows,n_cols))
-    for m in range(0, n_rows):
+    p1 = np.zeros((n_rows,n_cols))
+    p2 = np.zeros((n_rows,n_cols))
+    
+    for m in tqdm(range(0, n_rows)):
         for n in range(0, n_cols):
             crop = local_clasts[(local_clasts['y']>=m*cellsize) & 
                                  (local_clasts['y']<(m+1)*cellsize) & 
                                  (local_clasts['x']>=n*cellsize) & 
                                  (local_clasts['x']<(n+1)*cellsize)]
-            if np.shape(crop)[0]>0:
-                if str.lower(parameter) == "quantile":
-                    p[m,n] = np.quantile(crop[field], percentile)
-                if str.lower(parameter) == "density":
-                    p[m,n] = (np.shape(crop[field])[0]+1)/(cellsize**2)
-                if str.lower(parameter) == "average":
-                    p[m,n] = np.mean(crop[field])
-                if str.lower(parameter) == "kurtosis":
-                    p[m,n] = scipy.stats.kurtosis(crop[field])
-                if str.lower(parameter) == "skewness":
-                    p[m,n] = scipy.stats.skew(crop[field])
-                if str.lower(parameter) == "std":
-                    p[m,n] = np.std(crop[field])
-
+            if str.lower(field) == "orientation":
+                if np.shape(crop)[0]>0:
+                    if str.lower(parameter) == "quantile":
+                        p1[m,n] = np.nanquantile(crop['u'], percentile)
+                        p2[m,n] = np.nanquantile(crop['v'], percentile)
+                        p[m,n] = np.rad2deg(cart2pol(p1[m,n], p2[m,n])[1])
+                    if str.lower(parameter) == "density":
+                        p[m,n] = (np.shape(crop[field])[0]+1)/(cellsize**2)
+                    if str.lower(parameter) == "average":
+                        p1[m,n] = np.nanmean(crop['u'])
+                        p2[m,n] = np.nanmean(crop['v'])
+                        p[m,n] = np.rad2deg(cart2pol(p1[m,n], p2[m,n])[1])
+                    if str.lower(parameter) == "kurtosis":
+                        p1[m,n] = scipy.stats.kurtosis(crop['u'], nan_policy = 'omit')
+                        p2[m,n] = scipy.stats.kurtosis(crop['v'], nan_policy = 'omit')
+                        p[m,n] = np.rad2deg(cart2pol(p1[m,n], p2[m,n])[1])
+                    if str.lower(parameter) == "skewness":
+                        p1[m,n] = scipy.stats.skew(crop['u'], nan_policy = 'omit')
+                        p2[m,n] = scipy.stats.skew(crop['v'], nan_policy = 'omit')
+                        p[m,n] = np.rad2deg(cart2pol(p1[m,n], p2[m,n])[1])
+                    if str.lower(parameter) == "std":
+                        p1[m,n] = np.nanstd(crop['u'])
+                        p2[m,n] = np.nanstd(crop['v'])
+                        p[m,n] = np.rad2deg(cart2pol(p1[m,n], p2[m,n])[1])
+            else:
+                if np.shape(crop)[0]>0:
+                    if str.lower(parameter) == "quantile":
+                        p[m,n] = np.nanquantile(crop[field], percentile)
+                    if str.lower(parameter) == "density":
+                        p[m,n] = (np.shape(crop[field])[0]+1)/(cellsize**2)
+                    if str.lower(parameter) == "average":
+                        p[m,n] = np.nanmean(crop[field])
+                    if str.lower(parameter) == "kurtosis":
+                        p[m,n] = scipy.stats.kurtosis(crop[field], nan_policy = 'omit')
+                    if str.lower(parameter) == "skewness":
+                        p[m,n] = scipy.stats.skew(crop[field], nan_policy = 'omit')
+                    if str.lower(parameter) == "std":
+                        p[m,n] = np.nanstd(crop[field])
+    print('Saving...')
     raster = gdal.Open(ClastImageFilePath, gdal.GA_ReadOnly)
     geotransform = raster.GetGeoTransform()
     image = np.dstack([raster.GetRasterBand(1).ReadAsArray(), raster.GetRasterBand(2).ReadAsArray(),raster.GetRasterBand(3).ReadAsArray()] )
     
     driver = gdal.GetDriverByName("GTiff")
-    arr_out = p
+    arr_out = p.copy()
     outdata = driver.Create(RasterFileWritingPath, n_cols, n_rows, 1, gdal.GDT_Float64)
     outdata.SetGeoTransform([np.min(clasts['x']), cellsize, 0, np.min(clasts['y']), 0, cellsize ])
     outdata.SetProjection(raster.GetProjection())
@@ -81,4 +126,5 @@ def clasts_rasterize(ClastImageFilePath, ClastSizeListCSVFilePath, RasterFileWri
         else:
             ax2.set_title(parameter+" map")
         fig.colorbar(pos, ax=ax2)
+    print('File saved: '+RasterFileWritingPath)
     return p
