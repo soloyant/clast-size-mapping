@@ -24,6 +24,7 @@ This code relies on the initial implementation of [Mask R-CNN by Matterport](htt
    pip3 install scikit-image
    pip3 install GDAL
    pip3 install pandas
+   pip3 install tqdm
    ```
 4. Fill the [dedicated contact form](https://forms.gle/jpVWhQzEFuQvHuQE6) in order to receive a download link of the trained model weights.
 
