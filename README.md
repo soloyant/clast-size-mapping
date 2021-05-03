@@ -21,8 +21,8 @@ This code relies on the initial implementation of [Mask R-CNN by Matterport](htt
    ```
 3. Install the required dependencies using the following command lines
    ```bash 
+   conda install GDAL
    pip3 install scikit-image
-   pip3 install GDAL
    pip3 install pandas
    pip3 install tqdm
    ```
