@@ -1,7 +1,7 @@
 # Clast Size Measurement and Mapping using Mask R-CNN
 
 ## 1. Description
-Clasts Segmentation, Measurement and Mapping (CSMM) is an algorithm that uses the Mask-RCNN model ([He et al., 2017](https://openaccess.thecvf.com/content_iccv_2017/html/He_Mask_R-CNN_ICCV_2017_paper.html)) in order to analyze grain size of coarse clasts, rounded by water, on images. First, the model performs the unsupervized identification and contouring of the non-overlapping elements visible on RGB and Grayscale images. Their dimensions are then measured along the axes of the ellipse that shows the best fit to every detected object (fig. 1). When applied on ortho-images, the present algorithm is able to map several statistical indices commonly used in grain size analysis (quantiles, average, standard deviation, skewness, and kurtosis) (fig. 2) of different parameters (long/short axis length, circle equivalent diameter, particle surface area).
+Clasts Segmentation, Measurement and Mapping (CSMM) is an algorithm that uses the Mask-RCNN model ([He et al., 2017](https://openaccess.thecvf.com/content_iccv_2017/html/He_Mask_R-CNN_ICCV_2017_paper.html)) in order to analyze grain size of coarse clasts, rounded by water, on images. First, the model performs the unsupervized identification and contouring of the non-overlapping elements visible on RGB and Grayscale images. Their dimensions are then measured along the axes of the ellipse that shows the best fit to every detected object (fig. 1). When applied on ortho-images, the present algorithm is able to map several statistical indices commonly used in grain size analysis (quantiles, average, density, standard deviation, skewness, and kurtosis) (fig. 2) of different parameters (ellipse major and minor axis, clast length, width, orientation and surface area, detection probability score).
 
 *This code was written by Antoine Soloy and follows the methodology described in [Soloy et al. (2020)](https://www.mdpi.com/2072-4292/12/21/3659). It is based on the implementation of [Mask R-CNN by Matterport](https://github.com/matterport/Mask_RCNN)*
 
@@ -10,23 +10,43 @@ Clasts Segmentation, Measurement and Mapping (CSMM) is an algorithm that uses th
 
 ## 2. Requirements
 
-This code relies on the initial implementation of [Mask R-CNN by Matterport](https://github.com/matterport/Mask_RCNN). It is required to install this implementation first in order to be able to use the present algorithm.
+This code relies on the initial implementation of [Mask R-CNN by Matterport](https://github.com/matterport/Mask_RCNN) on Windows 10 and was successfully tested on a computer with the following configuration: Intel® Core™ i7-8850H CPU 2.6GHz, 32GB RAM, NVIDIA Quadro P600 GPU.
 
 ## 3. Installation
 
-1. Clone this repository
-2. Open an anaconda prompt and activate the environment where Mask R-CNN is installed
+It is recommended to install this implementation first in order to be able to use the present algorithm, although a
+
+The following installation instructions were adapted from [Matterport's github repository](https://github.com/matterport/Mask_RCNN). In case of any problem, please consider reviewing the original [installation process](https://github.com/matterport/Mask_RCNN#installation).
+
+1. Download and install Anaconda from [the official website](https://www.anaconda.com/), using the version that is the most appropriate to your computer.
+2. Open an anaconda prompt and install git:
    ```bash 
-   conda activate MaskRCNN 
+   conda install git
    ```
-3. Install the required dependencies using the following command lines
-   ```bash 
-   conda install GDAL
-   pip3 install scikit-image
-   pip3 install pandas
-   pip3 install tqdm
+3. Clone this repository to the location you want:
+   ```bash
+   cd C:\your\path\goes\here
+   git clone https://github.com/soloyant/clast-size-mapping
    ```
-4. Fill the [dedicated contact form](https://forms.gle/jpVWhQzEFuQvHuQE6) in order to receive a download link of the trained model weights.
+4. Create a new environment
+   ```bash
+   cd clast-size-mapping
+   conda create env --name CSM python=3.6.9
+   ```
+5. Activate the new environment
+   ```bash
+   conda activate CSM
+   ```
+6. Install all the dependencies
+   ```bash
+   conda install pip3
+   conda install requirements_conda.txt
+   pip3 install requirements_pip.txt
+   python setup.py install
+   ```
+7. Download and install [Visual C++ 2015 build tools](https://go.microsoft.com/fwlink/?LinkId=691126).
+8. (Optionnal, for GPU use) Download and install cuda and cudnn from nvidia's website. This implementation was only tested with version 9 of cuda.
+9. The installation should now be complete. Fill the [dedicated contact form](https://forms.gle/jpVWhQzEFuQvHuQE6) in order to receive a download link of the trained model weights.
 
 ## 4. Usage
 

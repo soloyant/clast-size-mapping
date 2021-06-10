@@ -23,29 +23,67 @@ def pol2cart(rho, phi):
     return(x, y)
 
 def clasts_rasterize(ClastImageFilePath, ClastSizeListCSVFilePath, RasterFileWritingPath, field = "Clast_length", parameter="quantile", cellsize=1, percentile=0.5, plot=True, figuresize = (15,20)):
-
-    """Converts the clast information from vector type to raster type.
-    ClastImageFilePath: Path of the geotiff file used to realize the clast detection and measurement
-    ClastSizeListCSVFilePath: Path of the CSV file containing the list of previously detected and measured clasts
-    RasterFileWritingPath: Path to be used for writing the raster produced by the present function
-    field: field (i.e. clast dimension) to be considered for computation (default = "Clast_length")
-    parameter: Parameter to be computed for each cell: 
-        - "quantile": returns the quantile valued for the threshold specified by the "percentile" keyword 
-        - "density": returns the density of objects per cell size unit
-        - "average": returns the average value for each cell
-        - "std": returns the standard deviation for each cell
-        - "kurtosis": returns the kurtosis size for each cell
-        - "skewness": returns the skewness value for each cell
-    cellsize: Wanted output raster cell size (same unit as the geotiff file used to realize the clast detection and measurement
-    percentile: Percentile to be used for computing the quantile of each cell (default = 0.5, i.e. median)
-    plot: Switch for displaying the produced maps (default = True)
-    figuresize: Size of the displayed figure (default = (10,10))
-    """
+    
+#     Converts the clast information from vector type to raster type.
+#     ClastImageFilePath: Path of the geotiff file used to realize the clast detection and measurement
+#     ClastSizeListCSVFilePath: Path of the CSV file containing the list of previously detected and measured clasts
+#     RasterFileWritingPath: Path to be used for writing the raster produced by the present function
+#     field: field (i.e. clast dimension) to be considered for computation (default = "Clast_length"):
+#         - Clast_length
+#         - Clast_width
+#         - Ellipse_major_axis
+#         - Ellipse_minor_axis
+#         - Equivalent_diameter
+#         - Score
+#         - Orientation
+#         - Surface_area
+#         - Clast_elongation
+#         - Ellipse_elongation
+#         - Clast_circularity
+#         - Ellipse_circularity
+#         - Deposition_velocity: Current velocity (m/s) related to the clast deposition according to Hjulström's diagram #DOI: 10.1115/OMAE2013-10524
+#         - Erosion_velocity: Current velocity (m/s) required in order to mobilize the clast according to Hjulström's diagram #DOI: 10.1115/OMAE2013-10524
+#     parameter: Parameter to be computed for each cell: 
+#         - "quantile": returns the quantile valued for the threshold specified by the "percentile" keyword 
+#         - "density": returns the density of objects per cell size unit
+#         - "average": returns the average value for each cell
+#         - "std": returns the standard deviation for each cell
+#         - "kurtosis": returns the kurtosis size for each cell
+#         - "skewness": returns the skewness value for each cell
+#     cellsize: Wanted output raster cell size (same unit as the geotiff file used to realize the clast detection and measurement
+#     percentile: Percentile to be used for computing the quantile of each cell (default = 0.5, i.e. median)
+#     plot: Switch for displaying the produced maps (default = True)
+#     figuresize: Size of the displayed figure (default = (10,10))
     
     clasts = pd.read_csv(ClastSizeListCSVFilePath)
     local_clasts = clasts.copy()
+    
+    local_clasts = local_clasts[local_clasts['Clast_length'].isnull()==False]
+    local_clasts = local_clasts[local_clasts['Clast_length']>0]
+    local_clasts = local_clasts[local_clasts['Clast_width']>0]
+    
     if str.lower(field) == "orientation":
         local_clasts['u'], local_clasts['v'] = pol2cart(np.ones(np.shape(local_clasts)[0]), np.deg2rad(local_clasts['Orientation']))
+    if str.lower(field) == "clast_elongation":
+        local_clasts['Clast_elongation'] = local_clasts['Clast_width']/local_clasts['Clast_length']
+    if str.lower(field) == "ellipse_elongation":
+        local_clasts['Ellipse_elongation'] = local_clasts['Ellipse_minor_axis']/local_clasts['Ellipse_major_axis']
+    if str.lower(field) == "clast_circularity" or str.lower(field) == "deposition_velocity" or str.lower(field) == "erosion_velocity" or str.lower(field) == "equivalent_diameter":
+        local_clasts['Equivalent_diameter'] = 2*np.sqrt(local_clasts['Surface_area']/np.pi)
+    if str.lower(field) == "clast_circularity":
+        local_clasts['Clast_circularity'] = local_clasts['Equivalent_diameter']/local_clasts['Clast_length']
+    if str.lower(field) == "deposition_velocity": 
+        local_clasts['Deposition_velocity'] = 77*(local_clasts['Equivalent_diameter']/(1+(24*local_clasts['Equivalent_diameter'])))
+    if str.lower(field) == "erosion_velocity":
+        rho_water = 1.025
+        rho_sed = 2.600
+        Rd = rho_sed / rho_water
+        g = 9.81
+        mu = 1.07e-3
+        nu = mu / rho_water
+        local_clasts['Erosion_velocity'] = 1.5*((nu/local_clasts['Equivalent_diameter'])**0.8) + 0.85*((nu/local_clasts['Equivalent_diameter'])**0.35) + 9.5*((Rd*g*local_clasts['Equivalent_diameter'])/(1+(2.25*Rd*g*local_clasts['Equivalent_diameter'])))
+    if str.lower(field) == "ellipse_circularity":
+        local_clasts['Ellipse_circularity'] = local_clasts['Equivalent_diameter']/local_clasts['Ellipse_major_axis']
     local_clasts['y'] = clasts['y']-np.min(clasts['y'])
     local_clasts['x'] = clasts['x']-np.min(clasts['x'])
     n_rows = math.ceil(np.max(local_clasts['y'])/cellsize)
