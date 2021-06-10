@@ -28,7 +28,6 @@ The following installation instructions were adapted from [Matterport's github r
    ```
 4. Create a new environment
    ```bash
-   cd clast-size-mapping
    conda create env --name CSM python=3.6.9
    ```
 5. Activate the new environment
