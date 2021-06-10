@@ -14,8 +14,6 @@ This code relies on the initial implementation of [Mask R-CNN by Matterport](htt
 
 ## 3. Installation
 
-It is recommended to install this implementation first in order to be able to use the present algorithm, although a
-
 The following installation instructions were adapted from [Matterport's github repository](https://github.com/matterport/Mask_RCNN). In case of any problem, please consider reviewing the original [installation process](https://github.com/matterport/Mask_RCNN#installation).
 
 1. Download and install Anaconda from [the official website](https://www.anaconda.com/), using the version that is the most appropriate to your computer.
