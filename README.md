@@ -1,3 +1,14 @@
+> [!IMPORTANT]
+> **This repository is retired and archived. Its successor is
+> [PebbleMapper](https://github.com/soloyant/PebbleMapper).**
+>
+> PebbleMapper carries the method of Soloy et al. (2020) forward in a desktop application:
+> the same Mask R-CNN detector, with rectification of quadrat photographs, detection on
+> ortho-images of any size, grain-size maps, zonal statistics, validation against hand or
+> caliper measurements, and PDF reports. It installs on Windows with a double-click.
+> Bug fixes and new work happen there only; this repository is kept read-only for
+> reference and for results produced with it.
+
 # Clast Size Measurement and Mapping using Mask R-CNN
 
 ## 1. Description
